@@ -1,13 +1,13 @@
 "use client"
 
-import { UserIdentification } from "./_component/form/user-identification";
+import { UserIdentification } from "../components/form/user-identification";
 import { useStepZustand } from "@/lib/zustand/step";
-import { AuthorizationLink } from "./_component/form/authorization-link";
-import { LoanReleased } from "./_component/form/loan-release";
-import { UserAddress } from "./_component/form/user-address";
-import { UserBank } from "./_component/form/user-bank";
-import { ChangeLoan } from "./_component/form/change-loan";
-import { AuthorizationLoanLink } from "./_component/form/authorization-loan-link";
+import { AuthorizationLink } from "../components/form/authorization-link";
+import { LoanReleased } from "../components/form/loan-release";
+import { UserAddress } from "../components/form/user-address";
+import { UserBank } from "../components/form/user-bank";
+import { ChangeLoan } from "../components/form/change-loan";
+import { AuthorizationLoanLink } from "../components/form/authorization-loan-link";
 
 export default function Home() {
   const { step } = useStepZustand()
