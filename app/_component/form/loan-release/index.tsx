@@ -31,11 +31,6 @@ export function LoanReleased() {
                     </div>
 
                     <div className="flex justify-between">
-                        <p>Valor Total do Empréstimo:</p>
-                        <span>R$ 4.487,04</span>
-                    </div>
-
-                    <div className="flex justify-between">
                         <p>Primeira Parcela:</p>
                         <span>01/02/2026</span>
                     </div>

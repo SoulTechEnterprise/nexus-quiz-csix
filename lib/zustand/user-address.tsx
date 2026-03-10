@@ -10,6 +10,7 @@ interface UserAddress {
   district: string
   city: string
   state: string
+  complement: string
 }
 
 interface UserAddressState {
@@ -28,10 +29,11 @@ export const useUserAddressZustand = create<UserAddressState>()(
         number: "",
         district: "",
         city: "",
-        state: ""
+        state: "",
+        complement: ""
       },
-      update: ({ zip_code, street, number, district, city, state }: UserAddress) => set({ data: { zip_code, street, number, district, city, state } }),
-      clean: () => set({ data: { zip_code: "", street: "", number: "", district: "", city: "", state: "" } }),
+      update: ({ zip_code, street, number, district, city, state, complement }: UserAddress) => set({ data: { zip_code, street, number, district, city, state, complement } }),
+      clean: () => set({ data: { zip_code: "", street: "", number: "", district: "", city: "", state: "", complement: "" } }),
     }),
     {
       name: 'user-address-zustand',

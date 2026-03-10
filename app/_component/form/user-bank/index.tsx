@@ -93,10 +93,7 @@ export function UserBank() {
                                         <SelectContent>
                                         <SelectGroup>
                                             <SelectItem value="Corrente Individual">Corrente Individual</SelectItem>
-                                            <SelectItem value="Corrente Conjunta">Corrente Conjunta</SelectItem>
                                             <SelectItem value="Poupança Individual">Poupança Individual</SelectItem>
-                                            <SelectItem value="Poupança Conjunta">Poupança Conjunta</SelectItem>
-                                            <SelectItem value="Salário">Salário</SelectItem>
                                             <SelectItem value="Investimento">Investimento</SelectItem>
                                         </SelectGroup>
                                         </SelectContent>

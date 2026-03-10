@@ -17,7 +17,8 @@ const zodScheme = z.object({
     number: z.string().min(1),
     district: z.string().nonempty(),
     city: z.string().nonempty(),
-    state: z.string().nonempty()
+    state: z.string().nonempty(),
+    complement: z.string().nonempty()
 })
 
 type ZodSchema = z.infer<typeof zodScheme>
@@ -25,7 +26,7 @@ type ZodSchema = z.infer<typeof zodScheme>
 const _FORM = "form-user-address"
 
 export function UserAddress() {
-    const { data: { zip_code, street, number, district, city, state }, update } = useUserAddressZustand()
+    const { data: { zip_code, street, number, district, city, state, complement }, update } = useUserAddressZustand()
 
     const { control, handleSubmit, setValue, setError, clearErrors, setFocus, formState: { isSubmitting } } = useForm({
         resolver: zodResolver(zodScheme),
@@ -35,7 +36,8 @@ export function UserAddress() {
             number: number || "",
             district: district || "",
             city: city || "",
-            state: state || ""
+            state: state || "",
+            complement: complement || ""
         }
     })
 
@@ -67,7 +69,7 @@ export function UserAddress() {
     }
 
     const handleForm = async ({ zip_code, street, number, district, city, state }: ZodSchema) => {
-        update({ zip_code, street, number, district, city, state })
+        update({ zip_code, street, number, district, city, state, complement })
 
         toast.success("Ok! Conseguimos anexar seu endereço no empréstimo.")
     }
@@ -166,6 +168,20 @@ export function UserAddress() {
                                     <Input 
                                         {...field}
                                         placeholder="SP"
+                                    />
+                                </Field>
+                            )}
+                        />
+
+                        <Controller
+                            name="complement"
+                            control={control}
+                            render={({field, fieldState}) => (
+                                <Field data-invalid={fieldState.invalid}>
+                                    <FieldLabel>Complemento</FieldLabel>
+                                    <Input 
+                                        {...field}
+                                        placeholder="Apartamento A"
                                     />
                                 </Field>
                             )}

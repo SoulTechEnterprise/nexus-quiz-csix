@@ -12,7 +12,6 @@ import { IMaskMixin } from "react-imask";
 import z from "zod";
 
 const zodSchema = z.object({
-    type: z.enum(["Parcela", "Valor Total"]),
     instalment: z.enum(["12x", "24x", "36x", "48x"]),
     amount: z.string()
 })
@@ -28,7 +27,7 @@ export function ChangeLoan() {
         resolver: zodResolver(zodSchema)
     })
 
-    const handleForm = ({ type, instalment, amount }: ZodSchema) => {
+    const handleForm = ({ instalment, amount }: ZodSchema) => {
         update(Step.LOAN_RELEASED)
     }
 
@@ -36,32 +35,11 @@ export function ChangeLoan() {
         <Card>
             <CardHeader>
                 <CardTitle className="flex items-center gap-2"><BadgeCheck className="size-4 text-blue-500" /> {process.env.NEXT_PUBLIC_TITLE_CARD}</CardTitle>
-                <CardDescription>Personalize sua oferta. Escolha como prefere simular o novo valor.</CardDescription>
+                <CardDescription>Configure os detalhes da sua oferta e avance para a próxima etapa da simulação.</CardDescription>
             </CardHeader>
             <CardContent>
                 <form onSubmit={handleSubmit(handleForm)} id={_FORM}>
                     <FieldGroup>
-                        <Controller
-                            name="type"
-                            control={control}
-                            render={({field, fieldState}) => (
-                                <Field data-invalid={fieldState.invalid}>
-                                    <FieldLabel>Modo</FieldLabel>
-                                    <Select onValueChange={field.onChange} value={field.value ?? ""}>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="..." />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                        <SelectGroup>
-                                            <SelectItem value="Parcela">Parcela</SelectItem>
-                                            <SelectItem value="Valor Total">Valor Total</SelectItem>
-                                        </SelectGroup>
-                                        </SelectContent>
-                                    </Select>
-                                </Field>
-                            )}
-                        />
-
                         <Controller
                             name="instalment"
                             control={control}

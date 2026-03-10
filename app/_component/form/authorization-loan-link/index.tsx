@@ -28,7 +28,7 @@ export function AuthorizationLoanLink() {
         <Card>
             <CardHeader>
                 <CardTitle className="flex items-center gap-2"><BadgeCheck className="size-4 text-blue-500" /> {process.env.NEXT_PUBLIC_TITLE_CARD}</CardTitle>
-                <CardDescription>"Digite seu WhatsApp para receber o link de autorização.</CardDescription>
+                <CardDescription>Digite seu WhatsApp para receber o link de autorização.</CardDescription>
             </CardHeader>
             <CardContent>
                 <form onSubmit={handleSubmit(handleForm)} id={_FORM}>
