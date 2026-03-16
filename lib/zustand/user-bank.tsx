@@ -7,7 +7,9 @@ interface UserBank {
   type: Bank | ""
   code: string
   agency: string
+  agency_digit: string
   account: string
+  account_digit: string
 }
 
 interface UserBankState {
@@ -24,10 +26,12 @@ export const useUserBankZustand = create<UserBankState>()(
         type: "",
         code: "",
         agency: "",
-        account: ""
+        agency_digit: "",
+        account: "",
+        account_digit: ""
       },
-      update: ({ type, code, agency, account }: UserBank) => set({ data: { type, code, agency, account } }),
-      clean: () => set({ data: { type: "", code: "", agency: "", account: "" } }),
+      update: ({ type, code, agency, agency_digit, account, account_digit }: UserBank) => set({ data: { type, code, agency, agency_digit, account, account_digit } }),
+      clean: () => set({ data: { type: "", code: "", agency: "", agency_digit: "", account: "", account_digit: "" } }),
     }),
     {
       name: 'user-bank-zustand',

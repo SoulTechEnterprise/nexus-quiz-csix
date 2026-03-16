@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Field, FieldGroup, FieldLabel, FieldDescription } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -24,7 +24,9 @@ const zodSchema = z.object({
     type: z.enum(Bank),
     code: z.string().nonempty(),
     agency: z.string().nonempty(),
-    account: z.string().nonempty()
+    agency_digit: z.string().default("0"),
+    account: z.string().nonempty(),
+    account_digit: z.string().default("0")
 })
 
 type ZodSchema = z.infer<typeof zodSchema>
@@ -32,7 +34,7 @@ type ZodSchema = z.infer<typeof zodSchema>
 const _FORM = "form-user-bank"
 
 export function UserBank() {
-    const { data: { type, code, agency, account }, update } = useUserBankZustand()
+    const { data: { type, code, agency, agency_digit, account, account_digit }, update } = useUserBankZustand()
 
     const { control, handleSubmit, formState: { isSubmitting } } = useForm({
         resolver: zodResolver(zodSchema),
@@ -40,7 +42,9 @@ export function UserBank() {
             type: (type || "") as any,
             code: code || "",
             agency: agency || "",
-            account: account || ""
+            agency_digit: agency_digit || "",
+            account: account || "",
+            account_digit: account_digit || ""
         }
     })
 
@@ -65,10 +69,10 @@ export function UserBank() {
         "756 - Banco Cooperativo do Brasil S.A. (Sicoob)"
     ];
     
-    const handleFormUserBank = ({ type, code, agency, account }: ZodSchema) => {
+    const handleFormUserBank = ({ type, code, agency, agency_digit, account, account_digit }: ZodSchema) => {
         toast.success("Banco adicionado com sucesso!")
 
-        update({ type, code, agency, account })
+        update({ type, code, agency, agency_digit, account, account_digit })
     }
 
     return (
@@ -126,35 +130,73 @@ export function UserBank() {
                             )}
                         />
 
-                        <Controller
-                            name="agency"
-                            control={control}
-                            render={({field, fieldState}) => (
-                                <Field data-invalid={fieldState.invalid}>
-                                    <FieldLabel>Agência</FieldLabel>
-                                    <Input 
-                                        {...field}
-                                        placeholder="..."
-                                        value={field.value ?? ""}
-                                    />
-                                </Field>
-                            )}
-                        />
+                        <div className="grid grid-cols-3 gap-4">
+                            <Controller
+                                name="agency"
+                                control={control}
+                                render={({field, fieldState}) => (
+                                    <Field className="col-span-2" data-invalid={fieldState.invalid}>
+                                        <FieldLabel>Agência</FieldLabel>
+                                        <Input 
+                                            {...field}
+                                            placeholder="1234"
+                                            value={field.value ?? ""}
+                                        />
+                                    </Field>
+                                )}
+                            />
 
-                        <Controller
-                            name="account"
-                            control={control}
-                            render={({field, fieldState}) => (
-                                <Field data-invalid={fieldState.invalid}>
-                                    <FieldLabel>Conta</FieldLabel>
-                                    <Input 
-                                        {...field}
-                                        placeholder="..."
-                                        value={field.value ?? ""}
-                                    />
-                                </Field>
-                            )}
-                        />
+                            <Controller
+                                name="agency_digit"
+                                control={control}
+                                render={({field, fieldState}) => (
+                                    <Field className="col-span-1" data-invalid={fieldState.invalid}>
+                                        <FieldLabel>Dígito</FieldLabel>
+                                        <Input 
+                                            {...field}
+                                            placeholder="0"
+                                            value={field.value ?? ""}
+                                        />
+                                    </Field>
+                                )}
+                            />
+
+                            <FieldDescription className="col-span-3">Caso não tenha dígito, deixe em branco</FieldDescription>
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-4">
+                            <Controller
+                                name="account"
+                                control={control}
+                                render={({field, fieldState}) => (
+                                    <Field className="col-span-2" data-invalid={fieldState.invalid}>
+                                        <FieldLabel>Conta</FieldLabel>
+                                        <Input 
+                                            {...field}
+                                            placeholder="123456789"
+                                            value={field.value ?? ""}
+                                        />
+                                    </Field>
+                                )}
+                            />
+
+                            <Controller
+                                name="account_digit"
+                                control={control}
+                                render={({field, fieldState}) => (
+                                    <Field className="col-span-1" data-invalid={fieldState.invalid}>
+                                        <FieldLabel>Dígito</FieldLabel>
+                                        <Input 
+                                            {...field}
+                                            placeholder="0"
+                                            value={field.value ?? ""}
+                                        />
+                                    </Field>
+                                )}
+                            />
+
+                            <FieldDescription className="col-span-3">Caso não tenha dígito, deixe em branco</FieldDescription>
+                        </div>
                     </FieldGroup>
                 </form>
             </CardContent>

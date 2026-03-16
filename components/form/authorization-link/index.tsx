@@ -15,6 +15,8 @@ import { toast } from "sonner"
 import { useStepZustand } from "@/lib/zustand/step"
 import { Step } from "@/enum/step"
 import { BadgeCheck } from "lucide-react"
+import { get_simulation } from "@/app/actions/get-simulation"
+import { TypeSimulation } from "@/enum/type_simulation"
 
 export function AuthorizationLink() {
     const { data: getLinkAuthorization } = useLinkAuthorizationZustand()
@@ -26,19 +28,21 @@ export function AuthorizationLink() {
         () => get_authorized({ document: getUserIdentification.document }),
         { 
             refreshInterval: (data) => {
-                if (!data?.status) return 5000
+                if (!data?.status) return 1000
                 
-                if (data.status === StatusAuthorizationLink.AGUARDANDO_AUTORIZACAO) return 5000
+                if (data.status === StatusAuthorizationLink.AGUARDANDO_AUTORIZACAO) return 1000
                 
                 return 0
             },
-            onSuccess: (data) => {
+            onSuccess: async (data) => {
                 if (data.status === StatusAuthorizationLink.NAO_AUTORIZADO) {
                     toast.error("Infelizmente você não autorizou a simulação do empréstimo")
                 }
 
                 if (data.status === StatusAuthorizationLink.AUTORIZADO) {
                     toast.success("Pronto!")
+
+                    const response = await get_simulation({ document: getUserIdentification.document, type_simulation: TypeSimulation.MAX })
 
                     update(Step.LOAN_RELEASED)
                 }

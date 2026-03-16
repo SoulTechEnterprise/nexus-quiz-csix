@@ -1,10 +1,13 @@
+import { get_simulation } from "@/app/actions/get-simulation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Step } from "@/enum/step";
+import { TypeSimulation } from "@/enum/type_simulation";
 import { useStepZustand } from "@/lib/zustand/step";
+import { useUserIdentificationZustand } from "@/lib/zustand/user-identification";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { BadgeCheck } from "lucide-react";
 import { Controller, useForm } from "react-hook-form";
@@ -22,12 +25,19 @@ const _FORM = "form-change-loan"
 
 export function ChangeLoan() {
     const { update } = useStepZustand()
+    const { data: getUserIdentification } = useUserIdentificationZustand()
 
     const { control, handleSubmit } = useForm<ZodSchema>({
         resolver: zodResolver(zodSchema)
     })
 
-    const handleForm = ({ instalment, amount }: ZodSchema) => {
+    const handleForm = async ({ instalment, amount }: ZodSchema) => {
+        
+        const _amount = Number(amount.replace(/\./g, "").replace(",", "."))
+        const _instalment = Number(instalment.replace(/x/g, ""));
+
+        const response = await get_simulation({ document: getUserIdentification.document, type_simulation: TypeSimulation.AMOUNT, amount: _amount, instalment: _instalment })
+
         update(Step.LOAN_RELEASED)
     }
 

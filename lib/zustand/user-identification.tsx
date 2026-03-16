@@ -3,11 +3,12 @@ import { persist } from 'zustand/middleware'
 import superjson from 'superjson'
 import { Sex } from '@/enum/sex'
 
-interface UserIdentification {
+export interface UserIdentification {
   name: string
   sex: Sex | ""
   date_birth: Date | ""
   document: string
+  phone: string
 }
 
 interface UserIdentificationState {
@@ -25,9 +26,10 @@ export const useUserIdentificationZustand = create<UserIdentificationState>()(
         sex: "",
         date_birth: "",
         document: "",
+        phone: ""
       },
-      update: ({ name, sex, date_birth, document }: UserIdentification) => set({ data: { name, sex, date_birth, document } }),
-      clean: () => set({ data: { name: "", sex: "", date_birth: "", document: "" } }),
+      update: ({ name, sex, date_birth, document, phone }: UserIdentification) => set({ data: { name, sex, date_birth, document, phone } }),
+      clean: () => set({ data: { name: "", sex: "", date_birth: "", document: "", phone: "" } }),
     }),
     {
       name: 'user-identification-zustand',
