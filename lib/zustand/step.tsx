@@ -6,6 +6,7 @@ import { Step } from "@/enum/step"
 
 interface StepState {
   step: Step
+  length: number
   update: (step: Step) => void
   clean: () => void
 }
@@ -14,8 +15,9 @@ export const useStepZustand = create<StepState>()(
   persist(
     (set) => ({
       step: Step.USER_IDENTIFICATION,
+      length: 0,
 
-      update: (step) => set({ step }),
+      update: (step) => set({ step, length: length + 1 }),
 
       clean: () => set({ step: Step.USER_IDENTIFICATION }),
     }),

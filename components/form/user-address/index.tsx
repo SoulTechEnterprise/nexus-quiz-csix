@@ -2,8 +2,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { FieldGroup, Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { GoogleTagManager } from "@/enum/google-tag-manager";
+import { Step } from "@/enum/step";
+import { useStepZustand } from "@/lib/zustand/step";
 import { useUserAddressZustand } from "@/lib/zustand/user-address";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { sendGTMEvent } from "@next/third-parties/google";
 import axios from "axios";
 import { BadgeCheck } from "lucide-react";
 import { Controller, useForm } from "react-hook-form";
@@ -26,7 +30,8 @@ type ZodSchema = z.infer<typeof zodScheme>
 const _FORM = "form-user-address"
 
 export function UserAddress() {
-    const { data: { zip_code, street, number, district, city, state, complement }, update } = useUserAddressZustand()
+    const { update } = useStepZustand()
+    const { data: { zip_code, street, number, district, city, state, complement }, update: setUserAddress } = useUserAddressZustand()
 
     const { control, handleSubmit, setValue, setError, clearErrors, setFocus, formState: { isSubmitting } } = useForm({
         resolver: zodResolver(zodScheme),
@@ -40,8 +45,6 @@ export function UserAddress() {
             complement: complement || ""
         }
     })
-
-    console.log(zip_code, street, number, district, city, state)
 
     const handleZipCode = async (zip_code: string) => {
         if(zip_code.length > 7) {
@@ -69,9 +72,17 @@ export function UserAddress() {
     }
 
     const handleForm = async ({ zip_code, street, number, district, city, state }: ZodSchema) => {
-        update({ zip_code, street, number, district, city, state, complement })
+        setUserAddress({ zip_code, street, number, district, city, state, complement })
+
+        sendGTMEvent({ event: GoogleTagManager.CLIENT_ADDRESS_SUBMITTED, data: {
+            client: {
+                zip_code, city, state
+            }
+        } })
 
         toast.success("Ok! Conseguimos anexar seu endereço no empréstimo.")
+
+        update(Step.USER_BANK)
     }
 
     return (

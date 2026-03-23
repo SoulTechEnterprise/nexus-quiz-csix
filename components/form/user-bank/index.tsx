@@ -19,6 +19,10 @@ import { Bank } from "@/enum/bank";
 import { useUserBankZustand } from "@/lib/zustand/user-bank";
 import { toast } from "sonner";
 import { BadgeCheck } from "lucide-react";
+import { useStepZustand } from "@/lib/zustand/step";
+import { Step } from "@/enum/step";
+import { sendGTMEvent } from "@next/third-parties/google";
+import { GoogleTagManager } from "@/enum/google-tag-manager";
 
 const zodSchema = z.object({
     type: z.enum(Bank),
@@ -34,9 +38,10 @@ type ZodSchema = z.infer<typeof zodSchema>
 const _FORM = "form-user-bank"
 
 export function UserBank() {
-    const { data: { type, code, agency, agency_digit, account, account_digit }, update } = useUserBankZustand()
+    const { update } = useStepZustand()
+    const { data: { type, code, agency, agency_digit, account, account_digit }, update: setUserBank } = useUserBankZustand()
 
-    const { control, handleSubmit, formState: { isSubmitting } } = useForm({
+    const { control, handleSubmit } = useForm({
         resolver: zodResolver(zodSchema),
         values: {
             type: (type || "") as any,
@@ -72,7 +77,11 @@ export function UserBank() {
     const handleFormUserBank = ({ type, code, agency, agency_digit, account, account_digit }: ZodSchema) => {
         toast.success("Banco adicionado com sucesso!")
 
-        update({ type, code, agency, agency_digit, account, account_digit })
+        setUserBank({ type, code, agency, agency_digit, account, account_digit })
+
+        sendGTMEvent({ event: GoogleTagManager.CLIENT_BANK_SUBMITTED })
+
+        update(Step.AUTHORIZATION_LOAN_LINK)
     }
 
     return (

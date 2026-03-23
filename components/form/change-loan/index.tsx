@@ -4,11 +4,13 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { GoogleTagManager } from "@/enum/google-tag-manager";
 import { Step } from "@/enum/step";
 import { TypeSimulation } from "@/enum/type_simulation";
 import { useStepZustand } from "@/lib/zustand/step";
 import { useUserIdentificationZustand } from "@/lib/zustand/user-identification";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { sendGTMEvent } from "@next/third-parties/google";
 import { BadgeCheck } from "lucide-react";
 import { Controller, useForm } from "react-hook-form";
 import { IMaskMixin } from "react-imask";
@@ -38,6 +40,8 @@ export function ChangeLoan() {
 
         const response = await get_simulation({ document: getUserIdentification.document, type_simulation: TypeSimulation.AMOUNT, amount: _amount, instalment: _instalment })
 
+        sendGTMEvent({ event: GoogleTagManager.LOAN_OFFER_CHANGED })
+
         update(Step.LOAN_RELEASED)
     }
 
@@ -45,11 +49,35 @@ export function ChangeLoan() {
         <Card>
             <CardHeader>
                 <CardTitle className="flex items-center gap-2"><BadgeCheck className="size-4 text-blue-500" /> {process.env.NEXT_PUBLIC_TITLE_CARD}</CardTitle>
-                <CardDescription>Configure os detalhes da sua oferta e avance para a próxima etapa da simulação.</CardDescription>
+                <CardDescription>Ajuste os detalhes da sua proposta e avance para a próxima etapa da simulação.</CardDescription>
             </CardHeader>
             <CardContent>
                 <form onSubmit={handleSubmit(handleForm)} id={_FORM}>
                     <FieldGroup>
+                        <Controller
+                            name="amount"
+                            control={control}
+                            render={({field, fieldState}) => (
+                                <Field data-invalid={fieldState.invalid}>
+                                    <FieldLabel>Novo valor</FieldLabel>
+                                    <InputMask
+                                        mask={Number}
+                                        radix=","
+                                        thousandsSeparator="."
+                                        padFractionalZeros={true}
+                                        normalizeZeros={true}
+                                        scale={2}
+                                        min={0}
+                                        max={1000000}
+                                        value={field.value?.toString() || ""}
+                                        unmask={false}
+                                        onAccept={(value: string) => field.onChange(value)}
+                                        placeholder="R$ 0,00"
+                                    />
+                                </Field>
+                            )}
+                        />
+
                         <Controller
                             name="instalment"
                             control={control}
@@ -72,35 +100,11 @@ export function ChangeLoan() {
                                 </Field>
                             )}
                         />
-
-                        <Controller
-                            name="amount"
-                            control={control}
-                            render={({field, fieldState}) => (
-                                <Field data-invalid={fieldState.invalid}>
-                                    <FieldLabel>Valor</FieldLabel>
-                                    <InputMask
-                                        mask={Number}
-                                        radix=","
-                                        thousandsSeparator="."
-                                        padFractionalZeros={true}
-                                        normalizeZeros={true}
-                                        scale={2}
-                                        min={0}
-                                        max={1000000}
-                                        value={field.value?.toString() || ""}
-                                        unmask={false}
-                                        onAccept={(value: string) => field.onChange(value)}
-                                        placeholder="R$ 0,00"
-                                    />
-                                </Field>
-                            )}
-                        />
                     </FieldGroup>
                 </form>
             </CardContent>
             <CardFooter>
-                <Button type="submit" form={_FORM}>Próximo</Button>
+                <Button type="submit" form={_FORM}>Consultar</Button>
             </CardFooter>
         </Card>
     )

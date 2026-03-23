@@ -23,9 +23,17 @@ import { toast } from "sonner"
 import { useUserIdentificationZustand } from "@/lib/zustand/user-identification"
 import { useStepZustand } from "@/lib/zustand/step"
 import { get_auth_link } from "@/app/actions/get-auth-link"
-import { useLinkAuthorizationZustand } from "@/lib/zustand/link-authorization"
 import { Step } from "@/enum/step"
 import { BadgeCheck } from "lucide-react"
+import { sendGTMEvent } from "@next/third-parties/google"
+import useSWR from "swr"
+import { get_authorized } from "@/app/actions/get-authorized"
+import { StatusAuthorizationLink } from "@/enum/status"
+import { get_simulation } from "@/app/actions/get-simulation"
+import { TypeSimulation } from "@/enum/type_simulation"
+import { GoogleTagManager } from "@/enum/google-tag-manager"
+import { useState } from "react"
+
 
 const zodSchema = z.object({
     document: z.string().min(11).max(11)
@@ -39,7 +47,8 @@ export function UserIdentification() {
 
     const { update } = useStepZustand()
     const { data: getUserIdentification, update: setUserIdentification } = useUserIdentificationZustand()
-    const { update: setLinkAuthorization } = useLinkAuthorizationZustand()
+    
+    const [ polling, setPolling ] = useState(false)
 
     const { control, handleSubmit, setError, formState: { isSubmitting } } = useForm<ZodSchema>({
         resolver: zodResolver(zodSchema),
@@ -68,11 +77,49 @@ export function UserIdentification() {
 
             const { link } = await get_auth_link({ name, date_birth, document })
 
-            setLinkAuthorization(link)
+            const first_name = name.split(' ')[0]
+            const last_name = name.split(' ').slice(1).join(' ') || ""
 
-            update(Step.AUTHORIZATION_LINK)
+            sendGTMEvent({ event: GoogleTagManager.CLIENT_DOCUMENT_SUBMITTED, data: {
+                client: { first_name, last_name }
+            } })
+
+            window.open(link, '_blank', 'noopener,noreferrer');
+
+            setPolling(true)
         }
     }
+
+    useSWR(
+        polling ? [, getUserIdentification.document] : null,
+        () => get_authorized({ document: getUserIdentification.document }),
+        { 
+            refreshInterval: (data) => {
+                if (!data?.status) return 1000
+                
+                if (data.status === StatusAuthorizationLink.AGUARDANDO_AUTORIZACAO) return 1000
+                
+                return 0
+            },
+            onSuccess: async (data) => {
+                if (data.status === StatusAuthorizationLink.NAO_AUTORIZADO) {
+                    toast.error("Infelizmente você não autorizou a simulação do empréstimo")
+
+                    sendGTMEvent({ event: GoogleTagManager.CLIENT_AUTH_DENIED })
+                }
+
+                if (data.status === StatusAuthorizationLink.AUTORIZADO) {
+                    toast.success("Pronto!")
+
+                    const response = await get_simulation({ document: getUserIdentification.document, type_simulation: TypeSimulation.MAX })
+
+                    sendGTMEvent({ event: GoogleTagManager.CLIENT_AUTH_GRANTED })
+
+                    update(Step.LOAN_RELEASED)
+                }
+            }
+        }
+    )
 
     return (
         <Card>
@@ -104,7 +151,7 @@ export function UserIdentification() {
                 </form>
             </CardContent>
             <CardFooter>
-                <Button disabled={isSubmitting} form={_FORM} type="submit">Próximo</Button>
+                <Button disabled={isSubmitting} form={_FORM} type="submit">Consultar</Button>
             </CardFooter>
         </Card>
     )

@@ -1,8 +1,12 @@
+import { GoogleTagManager } from '@next/third-parties/google'
+
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
+import { Footer } from '@/components/includes/footer';
+import { Cookies } from '@/components/includes/cookies';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,6 +30,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR" suppressHydrationWarning>
+      <GoogleTagManager gtmId={process.env.NEXT_PUBLIC_GOOGLE_TAG_MANAGER_CLIENT_ID!} gtmScriptUrl={process.env.NEXT_PUBLIC_GOOGLE_TAG_MANAGER_SERVER_URL!} />
+
       <body
         className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased`}
       >
@@ -38,6 +44,10 @@ export default function RootLayout({
             {children}
             <Toaster />
         </ThemeProvider>
+
+        <Footer />
+
+        <Cookies />
       </body>
     </html>
   );

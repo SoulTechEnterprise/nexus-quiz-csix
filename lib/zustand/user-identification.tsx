@@ -8,7 +8,7 @@ export interface UserIdentification {
   sex: Sex | ""
   date_birth: Date | ""
   document: string
-  phone: string
+  phone?: string
 }
 
 interface UserIdentificationState {

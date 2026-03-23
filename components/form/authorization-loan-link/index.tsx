@@ -1,14 +1,19 @@
 import { get_auth_loan } from "@/app/actions/get-auth-loan";
 import { send_loan } from "@/app/actions/send-loan";
+import { send_message_to_whatsapp } from "@/app/actions/send-message-to-whatsapp";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { GoogleTagManager } from "@/enum/google-tag-manager";
+import { Step } from "@/enum/step";
 import { useSimulationZustand } from "@/lib/zustand/simulation";
+import { useStepZustand } from "@/lib/zustand/step";
 import { useUserAddressZustand } from "@/lib/zustand/user-address";
 import { useUserBankZustand } from "@/lib/zustand/user-bank";
 import { useUserIdentificationZustand } from "@/lib/zustand/user-identification";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { sendGTMEvent } from "@next/third-parties/google";
 import { BadgeCheck } from "lucide-react";
 import { Controller, useForm } from "react-hook-form";
 import { IMaskMixin } from "react-imask";
@@ -23,6 +28,7 @@ type ZodSchema = z.infer<typeof zodSchema>
 const _FORM = "form-authorization-loan-link"
 
 export function AuthorizationLoanLink() {
+    const { update } = useStepZustand()
     const { data: getUserIdentification, update: setUserIdentification } = useUserIdentificationZustand()
     const { data: getUserAddress } = useUserAddressZustand()
     const { data: getUserBank } = useUserBankZustand()
@@ -36,6 +42,12 @@ export function AuthorizationLoanLink() {
     const handleForm = async ({ phone }: ZodSchema) => {
         setUserIdentification({...getUserIdentification, phone})
 
+        send_message_to_whatsapp({ name: getUserIdentification.name, phone, link: "https://google.com" })
+
+        sendGTMEvent({ event: GoogleTagManager.CLIENT_WHATSAPP_SUBMITTED })
+
+        /*
+        
         const proposal_number = await send_loan({
             id_simulation: getSimulation.simulation_id,
             client: {
@@ -46,13 +58,17 @@ export function AuthorizationLoanLink() {
         })
 
         await get_auth_loan(proposal_number)
+        
+        */
+
+        update(Step.THANKS)
     }
 
     return (
         <Card>
             <CardHeader>
                 <CardTitle className="flex items-center gap-2"><BadgeCheck className="size-4 text-blue-500" /> {process.env.NEXT_PUBLIC_TITLE_CARD}</CardTitle>
-                <CardDescription>Vamos enviar o link de autorização pelo Whastapp</CardDescription>
+                <CardDescription>Receba o link de autorização no seu Whatsapp.</CardDescription>
             </CardHeader>
             <CardContent>
                 <form onSubmit={handleSubmit(handleForm)} id={_FORM}>
@@ -76,7 +92,7 @@ export function AuthorizationLoanLink() {
                 </form>
             </CardContent>
             <CardFooter>
-                <Button type="submit" form={_FORM}>Pedir empréstimo</Button>
+                <Button type="submit" form={_FORM}>Enviar link</Button>
             </CardFooter>
         </Card>
     )
