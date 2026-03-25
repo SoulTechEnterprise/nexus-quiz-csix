@@ -42,8 +42,6 @@ type ZodSchema = z.infer<typeof zodSchema>
 const _FORM = "form-user-identification"
 
 export function UserIdentification() {
-	const [linkAuth, setLinkAuth] = useState("")
-
 	const { track } = useTrack()
 
 	const { update } = useStepZustand()
@@ -51,6 +49,8 @@ export function UserIdentification() {
 		authorized: getUserIdentificationAuthorized,
 		auth: setUserIdentificationAuth,
 		data: getUserIdentification,
+		link: getUserIdentificationLink,
+		update_link: setUserIdentificationLink,
 		update: setUserIdentification,
 	} = useUserIdentificationZustand()
 
@@ -92,6 +92,8 @@ export function UserIdentification() {
 			setUserIdentification({ name, sex, date_birth, document })
 
 			const { link } = await get_auth_link({ name, date_birth, document })
+
+			setUserIdentificationLink(link)
 
 			const first_name = name.split(" ")[0]
 			const last_name = name.split(" ").slice(1).join(" ") || ""
@@ -248,10 +250,16 @@ export function UserIdentification() {
 				</form>
 			</CardContent>
 			<CardFooter>
-				{linkAuth ? (
-					<Link target="_blank" rel="noopener noreferrer" href={linkAuth}>
-						Abrir link
-					</Link>
+				{getUserIdentificationLink ? (
+					<Button>
+						<Link
+							target="_blank"
+							rel="noopener noreferrer"
+							href={getUserIdentificationLink}
+						>
+							Abrir link
+						</Link>
+					</Button>
 				) : (
 					<Button disabled={isSubmitting} form={_FORM} type="submit">
 						Consultar

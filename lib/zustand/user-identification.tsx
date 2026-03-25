@@ -15,10 +15,12 @@ export interface UserIdentification {
 interface UserIdentificationState {
 	data: UserIdentification
 	authorized: GoogleTagManager | null
+	link: string | null
 
 	update: (data: UserIdentification) => void
 	clean: () => void
 	auth: (authorized: GoogleTagManager) => void
+	update_link: (link: string) => void
 }
 
 export const useUserIdentificationZustand = create<UserIdentificationState>()(
@@ -32,6 +34,7 @@ export const useUserIdentificationZustand = create<UserIdentificationState>()(
 				phone: "",
 			},
 			authorized: null,
+			link: null,
 			update: ({
 				name,
 				sex,
@@ -53,6 +56,11 @@ export const useUserIdentificationZustand = create<UserIdentificationState>()(
 			auth: (authorized: GoogleTagManager) => {
 				set({
 					authorized,
+				})
+			},
+			update_link: (link: string) => {
+				set({
+					link,
 				})
 			},
 		}),
