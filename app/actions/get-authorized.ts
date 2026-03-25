@@ -1,22 +1,37 @@
 "use server"
 
-import { StatusAuthorizationLink } from "@/enum/status"
 import axios from "axios"
+import type { StatusAuthorizationLink } from "@/enum/status"
+import { get_access_token } from "./get-access-token"
 
 interface get_authorized_req {
-    document: string
+	document: string
 }
 
 interface get_authorized_res {
-    status: StatusAuthorizationLink
+	status: StatusAuthorizationLink
 }
 
-export async function get_authorized({ document }: get_authorized_req): Promise<get_authorized_res> {
-    const { data } = await axios.post("https://marketplace-proposal-service-api-p.c6bank.info/marketplace/authorization/status", {
-        cpf: document
-    }, {})
+export async function get_authorized({
+	document,
+}: get_authorized_req): Promise<get_authorized_res> {
+	const { access_token } = await get_access_token()
 
-    const { status } = data
+	const { data } = await axios.post(
+		"https://marketplace-proposal-service-api-p.c6bank.info/marketplace/authorization/status",
+		{
+			cpf: document,
+		},
+		{
+			headers: {
+				Authorization: access_token,
+			},
+		},
+	)
 
-    return { status }
+	const { status } = data
+
+	console.log(data)
+
+	return { status }
 }

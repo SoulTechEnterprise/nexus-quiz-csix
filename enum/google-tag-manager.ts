@@ -1,28 +1,36 @@
 export enum GoogleTagManager {
-  // Etapa 1 - CPF
-  CLIENT_DOCUMENT_SUBMITTED = "document_submitted",
+	PAGE_VIEW = "2a188f7f-c389-49b5-ba7e-a93581b70328",
+	API_ERROR = "fb80bcf7-fa27-41c2-a5e7-e182f1c58aa0",
 
-  // Etapa 2 - Autorização API
-  CLIENT_AUTH_DENIED = "auth_denied",
-  CLIENT_AUTH_GRANTED = "auth_granted",
+	// Etapa 1 - CPF
+	CLIENT_DOCUMENT_SUBMITTED = "7ee45033-7fa3-43e2-95c5-5cfa147a4647",
 
-  // Etapa 3 - Oferta
-  LOAN_OFFER_VIEWED = "loan_offer_viewed",
-  LOAN_OFFER_ACCEPTED = "loan_offer_accepted",
-  LOAN_OFFER_CHANGE = "loan_offer_change",
+	// Etapa 2 - Autorização API
+	CLIENT_AUTH_DENIED = "f21e25c0-ada7-4911-8ae4-f3ec85cf43d9",
+	CLIENT_AUTH_GRANTED = "f82722be-102f-4ee8-9e29-850ab4bf9033",
+	CLIENT_WAITING_FOR_AUTHORIZATION = "fb571263-9329-43d9-b090-d6f741d716fa",
 
-  // Etapa 3b - Alteração de valor
-  LOAN_OFFER_CHANGED = "loan_offer_changed",
+	LOAN_OFFER_DENIED = "3752c46b-f9f2-45db-9012-1cd529327c9e",
 
-  // Etapa 4 - Endereço
-  CLIENT_ADDRESS_SUBMITTED = "address_submitted",
+	// Etapa 3 - Oferta
+	LOAN_OFFER_VIEWED = "89bb9a9c-bcdc-4c8a-90e8-749f724d409a",
+	LOAN_OFFER_ACCEPTED = "9021a9cd-f041-4018-a0b5-28d19ee12fb2",
+	LOAN_OFFER_CHANGE = "323ca01a-971d-49dc-b6f5-2847243de90f",
 
-  // Etapa 5 - Banco
-  CLIENT_BANK_SUBMITTED = "bank_submitted",
+	// Etapa 3b - Alteração de valor
+	LOAN_OFFER_CHANGED = "a3e0d91c-86ec-485a-a269-709d9c138e20",
 
-  // Etapa 6 - WhatsApp
-  CLIENT_WHATSAPP_SUBMITTED = "whatsapp_submitted",
+	// Etapa 4 - Endereço
+	CLIENT_ADDRESS_SUBMITTED = "33fcea29-4061-4ee0-aec6-7d41d7b41d4b",
 
-  // Agradecimento
-  WHATSAPP_CLICKED = "whatsapp_clicked",
+	// Etapa 5 - Banco
+	CLIENT_BANK_SUBMITTED = "f25a36db-80fa-4c1e-9e67-f03c07b87812",
+
+	// Etapa 6 - WhatsApp
+	CLIENT_WHATSAPP_SUBMITTED = "58ed18ec-ed3d-43f7-ad4d-79db3e2ccf42",
+
+	// Agradecimento
+	WHATSAPP_CLICKED = "3df50fff-831e-498f-9a9f-70b011323df2",
+
+	COOKIES_CONSENT = "a983a632-fe94-4026-a436-4911da7b982b",
 }
