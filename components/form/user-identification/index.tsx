@@ -1,9 +1,9 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { sendGTMEvent } from "@next/third-parties/google"
 import { format, parse } from "date-fns"
-import { BadgeCheck } from "lucide-react"
+import { ArrowLeft, ArrowRight, BadgeCheck } from "lucide-react"
 import Link from "next/link"
-import { useEffect, useState } from "react"
+import { useEffect } from "react"
 import { Controller, useForm } from "react-hook-form"
 import { IMaskMixin } from "react-imask"
 import { toast } from "sonner"
@@ -108,13 +108,11 @@ export function UserIdentification() {
 					client: { first_name, last_name },
 				},
 			})
-
-			setUserIdentificationAuth(
-				StatusAuthorizationLink.WAITING_FOR_AUTHORIZATION,
-			)
-
-			window.open(link, "_blank", "noopener,noreferrer")
 		}
+	}
+
+	function handleOptIn() {
+		setUserIdentificationAuth(StatusAuthorizationLink.WAITING_FOR_AUTHORIZATION)
 	}
 
 	useEffect(() => {
@@ -247,14 +245,24 @@ export function UserIdentification() {
 			</CardContent>
 			<CardFooter>
 				{getUserIdentificationLink ? (
-					<Button>
+					<Button onClick={handleOptIn}>
 						<Link
-							className="w-full h-full flex items-center justify-center"
+							className="w-full h-full flex items-center justify-center gap-4"
 							target="_blank"
 							rel="noopener noreferrer"
 							href={getUserIdentificationLink}
 						>
-							Abrir link
+							<div className="rotate-90">
+								<div className="animate-bounce">
+									<ArrowRight className="-rotate-90 size-4" />{" "}
+								</div>
+							</div>
+							ABRIR LINK DE AUTORIZAÇÃO
+							<div className="-rotate-90">
+								<div className="animate-bounce">
+									<ArrowLeft className="rotate-90 size-4" />{" "}
+								</div>
+							</div>
 						</Link>
 					</Button>
 				) : (
