@@ -128,7 +128,7 @@ export function UserIdentification() {
 		}
 	}, [getUserIdentificationAuthorized])
 
-	const { mutate } = useSWR(
+	useSWR(
 		getUserIdentificationAuthorized ===
 			StatusAuthorizationLink.WAITING_FOR_AUTHORIZATION
 			? [getUserIdentification.document]
@@ -136,26 +136,18 @@ export function UserIdentification() {
 		() => get_authorized({ document: getUserIdentification.document }),
 		{
 			refreshInterval: (data) => {
-				if (!data) return 0
-
-				if (!data?.status) {
+				if (
+					!data ||
+					!data.status ||
+					data.status === StatusAuthorizationLink.WAITING_FOR_AUTHORIZATION
+				) {
 					sendGTMEvent({
 						event: GoogleTagManager.CLIENT_WAITING_FOR_AUTHORIZATION,
 					})
 					track({
 						event: GoogleTagManager.CLIENT_WAITING_FOR_AUTHORIZATION,
 					})
-
-					return 5000
-				}
-
-				if (data.status === StatusAuthorizationLink.WAITING_FOR_AUTHORIZATION) {
-					sendGTMEvent({
-						event: GoogleTagManager.CLIENT_WAITING_FOR_AUTHORIZATION,
-					})
-					track({
-						event: GoogleTagManager.CLIENT_WAITING_FOR_AUTHORIZATION,
-					})
+					console.log(true)
 
 					return 5000
 				}
@@ -217,22 +209,6 @@ export function UserIdentification() {
 			},
 		},
 	)
-
-	useEffect(() => {
-		const handleVisibilityChange = () => {
-			if (
-				document.visibilityState === "visible" &&
-				getUserIdentificationAuthorized ===
-					StatusAuthorizationLink.WAITING_FOR_AUTHORIZATION
-			) {
-				mutate()
-			}
-		}
-
-		document.addEventListener("visibilitychange", handleVisibilityChange)
-		return () =>
-			document.removeEventListener("visibilitychange", handleVisibilityChange)
-	}, [getUserIdentificationAuthorized, mutate])
 
 	return (
 		<Card>
