@@ -10,8 +10,11 @@ import {
 	CardTitle,
 } from "@/components/ui/card"
 import { GoogleTagManager } from "@/enum/google-tag-manager"
+import { useUserIdentificationZustand } from "@/lib/zustand/user-identification"
 
 export function Thanks() {
+	const { link: getUserIdentificationLink } = useUserIdentificationZustand()
+
 	return (
 		<Card>
 			<CardHeader>
@@ -31,7 +34,7 @@ export function Thanks() {
 				>
 					<Link
 						className="w-full h-full flex items-center justify-center"
-						href={process.env.NEXT_PUBLIC_LINK_WHATSAPP || ""}
+						href={getUserIdentificationLink || ""}
 					>
 						Autorizar empréstimo
 					</Link>

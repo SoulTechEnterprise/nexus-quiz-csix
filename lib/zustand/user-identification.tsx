@@ -3,6 +3,7 @@ import { create } from "zustand"
 import { persist } from "zustand/middleware"
 import { GoogleTagManager } from "@/enum/google-tag-manager"
 import type { Sex } from "@/enum/sex"
+import { StatusAuthorizationLink } from "@/enum/status"
 
 export interface UserIdentification {
 	name: string
@@ -14,12 +15,12 @@ export interface UserIdentification {
 
 interface UserIdentificationState {
 	data: UserIdentification
-	authorized: GoogleTagManager | null
+	authorized: StatusAuthorizationLink | null
 	link: string | null
 
 	update: (data: UserIdentification) => void
 	clean: () => void
-	auth: (authorized: GoogleTagManager) => void
+	auth: (authorized: StatusAuthorizationLink) => void
 	update_link: (link: string) => void
 }
 
@@ -53,7 +54,7 @@ export const useUserIdentificationZustand = create<UserIdentificationState>()(
 						phone: "",
 					},
 				}),
-			auth: (authorized: GoogleTagManager) => {
+			auth: (authorized: StatusAuthorizationLink) => {
 				set({
 					authorized,
 				})

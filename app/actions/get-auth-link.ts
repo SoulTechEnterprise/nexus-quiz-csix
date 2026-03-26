@@ -34,8 +34,6 @@ export async function get_auth_link({
 		},
 	)
 
-	console.log(data)
-
 	const { link } = data
 
 	return { link }

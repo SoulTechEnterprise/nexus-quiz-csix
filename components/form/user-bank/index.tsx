@@ -201,6 +201,7 @@ export function UserBank() {
 											{...field}
 											placeholder="1234"
 											value={field.value ?? ""}
+											inputMode="numeric"
 										/>
 									</Field>
 								)}
@@ -243,6 +244,7 @@ export function UserBank() {
 											{...field}
 											placeholder="123456789"
 											value={field.value ?? ""}
+											inputMode="numeric"
 										/>
 									</Field>
 								)}

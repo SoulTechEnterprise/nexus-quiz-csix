@@ -36,8 +36,11 @@ const _FORM = "form-authorization-loan-link"
 
 export function AuthorizationLoanLink() {
 	const { update } = useStepZustand()
-	const { data: getUserIdentification, update: setUserIdentification } =
-		useUserIdentificationZustand()
+	const {
+		data: getUserIdentification,
+		update: setUserIdentification,
+		update_link: setUserIdentificationLink,
+	} = useUserIdentificationZustand()
 	const { data: getUserAddress } = useUserAddressZustand()
 	const { data: getUserBank } = useUserBankZustand()
 
@@ -50,28 +53,33 @@ export function AuthorizationLoanLink() {
 	const handleForm = async ({ phone }: ZodSchema) => {
 		setUserIdentification({ ...getUserIdentification, phone })
 
+		sendGTMEvent({ event: GoogleTagManager.CLIENT_WHATSAPP_SUBMITTED })
+
+		const proposal_number = await send_loan({
+			id_simulation: getSimulation.simulation_id,
+			client: {
+				info: {
+					document: getUserIdentification.document,
+					phone,
+				},
+				address: getUserAddress,
+				bank: getUserBank,
+			},
+		})
+
+		if (!proposal_number) {
+			return
+		}
+
+		const { link } = await get_auth_loan(proposal_number)
+
 		send_message_to_whatsapp({
 			name: getUserIdentification.name,
 			phone,
-			link: "https://google.com",
+			link,
 		})
 
-		sendGTMEvent({ event: GoogleTagManager.CLIENT_WHATSAPP_SUBMITTED })
-
-		/*
-        
-        const proposal_number = await send_loan({
-            id_simulation: getSimulation.simulation_id,
-            client: {
-                info: getUserIdentification,
-                address: getUserAddress,
-                bank: getUserBank
-            }
-        })
-
-        await get_auth_loan(proposal_number)
-        
-        */
+		setUserIdentificationLink(link)
 
 		update(Step.THANKS)
 	}
@@ -104,6 +112,7 @@ export function AuthorizationLoanLink() {
 									lazy={true}
 									unmask={true}
 									placeholder="(00) 00000-0000"
+									inputMode="numeric"
 								/>
 							</Field>
 						)}

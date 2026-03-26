@@ -27,29 +27,36 @@ import {
 import { GoogleTagManager } from "@/enum/google-tag-manager"
 import { Step } from "@/enum/step"
 import { TypeSimulation } from "@/enum/type_simulation"
+import { useSimulationZustand } from "@/lib/zustand/simulation"
 import { useStepZustand } from "@/lib/zustand/step"
 import { useUserIdentificationZustand } from "@/lib/zustand/user-identification"
 
-const zodSchema = z.object({
-	instalment: z.enum(["12x", "24x", "36x", "48x"]),
-	amount: z.string(),
-})
+const createZodSchema = (maxAmount: number) =>
+	z.object({
+		instalment: z.enum(["12x", "24x", "36x", "48x"]),
+		amount: z.string().refine((val) => {
+			const parsed = Number(val.replace(/\./g, "").replace(",", "."))
+			if (maxAmount === null) return true
+			return parsed <= maxAmount
+		}, "O valor não pode ser maior que o limite disponível"),
+	})
 
-type ZodSchema = z.infer<typeof zodSchema>
+type ZodSchema = z.infer<ReturnType<typeof createZodSchema>>
 
 const _FORM = "form-change-loan"
 
 export function ChangeLoan() {
 	const { update } = useStepZustand()
+	const { data: getSimulation, update: setSimulation } = useSimulationZustand()
 	const { data: getUserIdentification } = useUserIdentificationZustand()
 
 	const { control, handleSubmit } = useForm<ZodSchema>({
-		resolver: zodResolver(zodSchema),
+		resolver: zodResolver(createZodSchema(getSimulation?.client_amount || 0)),
 	})
 
 	const handleForm = async ({ instalment, amount }: ZodSchema) => {
 		const _amount = Number(amount.replace(/\./g, "").replace(",", "."))
-		const _instalment = Number(instalment.replace(/x/g, ""))
+		const _instalment = Number(instalment.replace("x", ""))
 
 		const response = await get_simulation({
 			document: getUserIdentification.document,
@@ -58,8 +65,13 @@ export function ChangeLoan() {
 			instalment: _instalment,
 		})
 
+		if (!response) {
+			return
+		}
+
 		sendGTMEvent({ event: GoogleTagManager.LOAN_OFFER_CHANGED })
 
+		setSimulation(response)
 		update(Step.LOAN_RELEASED)
 	}
 
@@ -72,7 +84,12 @@ export function ChangeLoan() {
 				</CardTitle>
 				<CardDescription>
 					Ajuste os detalhes da sua proposta e avance para a próxima etapa da
-					simulação.
+					simulação. (Valor máximo:{" "}
+					{new Intl.NumberFormat("pt-BR", {
+						style: "currency",
+						currency: "BRL",
+					}).format(Number(getSimulation?.client_amount))}
+					)
 				</CardDescription>
 			</CardHeader>
 			<CardContent>
@@ -97,6 +114,7 @@ export function ChangeLoan() {
 										unmask={false}
 										onAccept={(value: string) => field.onChange(value)}
 										placeholder="R$ 0,00"
+										inputMode="numeric"
 									/>
 								</Field>
 							)}

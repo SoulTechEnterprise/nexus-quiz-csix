@@ -110,7 +110,7 @@ export function UserIdentification() {
 			})
 
 			setUserIdentificationAuth(
-				GoogleTagManager.CLIENT_WAITING_FOR_AUTHORIZATION,
+				StatusAuthorizationLink.WAITING_FOR_AUTHORIZATION,
 			)
 
 			window.open(link, "_blank", "noopener,noreferrer")
@@ -120,7 +120,7 @@ export function UserIdentification() {
 	useEffect(() => {
 		if (
 			getUserIdentificationAuthorized ===
-			GoogleTagManager.CLIENT_WAITING_FOR_AUTHORIZATION
+			StatusAuthorizationLink.WAITING_FOR_AUTHORIZATION
 		) {
 			toast.loading("Aguarde, estamos fazendo a simulação.", {
 				id: "toast-loading",
@@ -128,9 +128,9 @@ export function UserIdentification() {
 		}
 	}, [getUserIdentificationAuthorized])
 
-	useSWR(
+	const { mutate } = useSWR(
 		getUserIdentificationAuthorized ===
-			GoogleTagManager.CLIENT_WAITING_FOR_AUTHORIZATION
+			StatusAuthorizationLink.WAITING_FOR_AUTHORIZATION
 			? [getUserIdentification.document]
 			: null,
 		() => get_authorized({ document: getUserIdentification.document }),
@@ -162,6 +162,9 @@ export function UserIdentification() {
 
 				return 0
 			},
+			revalidateOnFocus: true,
+			refreshWhenHidden: false,
+			refreshWhenOffline: false,
 			onSuccess: async (data) => {
 				if (data.status === StatusAuthorizationLink.UNAUTHORIZED) {
 					toast.dismiss("toast-loading")
@@ -171,7 +174,7 @@ export function UserIdentification() {
 					track({
 						event: GoogleTagManager.CLIENT_AUTH_DENIED,
 					})
-					setUserIdentificationAuth(GoogleTagManager.CLIENT_AUTH_DENIED)
+					setUserIdentificationAuth(StatusAuthorizationLink.UNAUTHORIZED)
 				}
 
 				if (data.status === StatusAuthorizationLink.AUTHORIZED) {
@@ -185,7 +188,8 @@ export function UserIdentification() {
 						toast.error(
 							"O banco não liberou nenhuma quantia de empréstimo para você.",
 							{
-								duration: 10000,
+								duration: 30000,
+								dismissible: false,
 							},
 						)
 
@@ -193,7 +197,7 @@ export function UserIdentification() {
 						track({
 							event: GoogleTagManager.LOAN_OFFER_DENIED,
 						})
-						setUserIdentificationAuth(GoogleTagManager.CLIENT_AUTH_DENIED)
+						setUserIdentificationAuth(StatusAuthorizationLink.UNAUTHORIZED)
 
 						return
 					}
@@ -206,13 +210,29 @@ export function UserIdentification() {
 						event: GoogleTagManager.CLIENT_AUTH_GRANTED,
 					})
 
-					setUserIdentificationAuth(GoogleTagManager.CLIENT_AUTH_GRANTED)
+					setUserIdentificationAuth(StatusAuthorizationLink.AUTHORIZED)
 					setSimulation(response)
 					update(Step.LOAN_RELEASED)
 				}
 			},
 		},
 	)
+
+	useEffect(() => {
+		const handleVisibilityChange = () => {
+			if (
+				document.visibilityState === "visible" &&
+				getUserIdentificationAuthorized ===
+					StatusAuthorizationLink.WAITING_FOR_AUTHORIZATION
+			) {
+				mutate()
+			}
+		}
+
+		document.addEventListener("visibilitychange", handleVisibilityChange)
+		return () =>
+			document.removeEventListener("visibilitychange", handleVisibilityChange)
+	}, [getUserIdentificationAuthorized, mutate])
 
 	return (
 		<Card>
@@ -253,6 +273,7 @@ export function UserIdentification() {
 				{getUserIdentificationLink ? (
 					<Button>
 						<Link
+							className="w-full h-full flex items-center justify-center"
 							target="_blank"
 							rel="noopener noreferrer"
 							href={getUserIdentificationLink}
