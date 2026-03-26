@@ -53,6 +53,8 @@ export const useUserIdentificationZustand = create<UserIdentificationState>()(
 						document: "",
 						phone: "",
 					},
+					link: null,
+					authorized: null,
 				}),
 			auth: (authorized: StatusAuthorizationLink) => {
 				set({

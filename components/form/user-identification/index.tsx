@@ -52,6 +52,7 @@ export function UserIdentification() {
 		link: getUserIdentificationLink,
 		update_link: setUserIdentificationLink,
 		update: setUserIdentification,
+		clean: cleanUserIdentification,
 	} = useUserIdentificationZustand()
 
 	const { update: setSimulation } = useSimulationZustand()
@@ -188,6 +189,7 @@ export function UserIdentification() {
 							event: GoogleTagManager.LOAN_OFFER_DENIED,
 						})
 						setUserIdentificationAuth(StatusAuthorizationLink.UNAUTHORIZED)
+						cleanUserIdentification()
 
 						return
 					}
