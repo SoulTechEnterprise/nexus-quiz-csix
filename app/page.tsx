@@ -28,6 +28,8 @@ export default function Home() {
 			track({ event: GoogleTagManager.PAGE_VIEW })
 			hasTracked.current = true
 		}
+
+		localStorage.clear()
 	}, [track])
 
 	const ProgressMap: Partial<Record<Step, number>> = {

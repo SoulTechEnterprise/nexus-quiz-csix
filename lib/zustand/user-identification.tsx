@@ -13,15 +13,20 @@ export interface UserIdentification {
 	phone?: string
 }
 
+export interface UserIdentificationLink {
+	url: string | null
+	expiration_date: string | null
+}
+
 interface UserIdentificationState {
 	data: UserIdentification
 	authorized: StatusAuthorizationLink | null
-	link: string | null
+	link: UserIdentificationLink
 
 	update: (data: UserIdentification) => void
 	clean: () => void
 	auth: (authorized: StatusAuthorizationLink) => void
-	update_link: (link: string) => void
+	update_link: (url: string, expiration_date: string) => void
 }
 
 export const useUserIdentificationZustand = create<UserIdentificationState>()(
@@ -35,7 +40,10 @@ export const useUserIdentificationZustand = create<UserIdentificationState>()(
 				phone: "",
 			},
 			authorized: null,
-			link: null,
+			link: {
+				url: null,
+				expiration_date: null,
+			},
 			update: ({
 				name,
 				sex,
@@ -53,7 +61,10 @@ export const useUserIdentificationZustand = create<UserIdentificationState>()(
 						document: "",
 						phone: "",
 					},
-					link: null,
+					link: {
+						url: null,
+						expiration_date: null,
+					},
 					authorized: null,
 				}),
 			auth: (authorized: StatusAuthorizationLink) => {
@@ -61,9 +72,12 @@ export const useUserIdentificationZustand = create<UserIdentificationState>()(
 					authorized,
 				})
 			},
-			update_link: (link: string) => {
+			update_link: (url: string, expiration_date: string) => {
 				set({
-					link,
+					link: {
+						url,
+						expiration_date,
+					},
 				})
 			},
 		}),

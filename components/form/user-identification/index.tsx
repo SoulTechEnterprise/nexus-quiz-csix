@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { sendGTMEvent } from "@next/third-parties/google"
-import { format, parse } from "date-fns"
+import { format, isAfter, parse } from "date-fns"
 import { ArrowLeft, ArrowRight, BadgeCheck } from "lucide-react"
 import Link from "next/link"
 import { useEffect } from "react"
@@ -83,33 +83,39 @@ export function UserIdentification() {
 			toast.error(error)
 
 			track({ event: GoogleTagManager.API_ERROR })
-		} else {
-			let { name, sex, date_birth } = data
-			date_birth = format(
-				parse(date_birth, "dd/MM/yyyy", new Date()),
-				"yyyy-MM-dd",
-			)
 
-			setUserIdentification({ name, sex, date_birth, document })
-
-			const { link } = await get_auth_link({ name, date_birth, document })
-
-			setUserIdentificationLink(link)
-
-			const first_name = name.split(" ")[0]
-			const last_name = name.split(" ").slice(1).join(" ") || ""
-
-			track({
-				event: GoogleTagManager.CLIENT_DOCUMENT_SUBMITTED,
-				data: { name, sex, date_birth, document },
-			})
-			sendGTMEvent({
-				event: GoogleTagManager.CLIENT_DOCUMENT_SUBMITTED,
-				data: {
-					client: { first_name, last_name },
-				},
-			})
+			return
 		}
+
+		let { name, sex, date_birth } = data
+		date_birth = format(
+			parse(date_birth, "dd/MM/yyyy", new Date()),
+			"yyyy-MM-dd",
+		)
+
+		setUserIdentification({ name, sex, date_birth, document })
+
+		const { link, expiration_date } = await get_auth_link({
+			name,
+			date_birth,
+			document,
+		})
+
+		setUserIdentificationLink(link, expiration_date)
+
+		const first_name = name.split(" ")[0]
+		const last_name = name.split(" ").slice(1).join(" ") || ""
+
+		track({
+			event: GoogleTagManager.CLIENT_DOCUMENT_SUBMITTED,
+			data: { name, sex, date_birth, document },
+		})
+		sendGTMEvent({
+			event: GoogleTagManager.CLIENT_DOCUMENT_SUBMITTED,
+			data: {
+				client: { first_name, last_name },
+			},
+		})
 	}
 
 	function handleOptIn() {
@@ -123,9 +129,22 @@ export function UserIdentification() {
 		) {
 			toast.loading("Aguarde, estamos fazendo a simulação.", {
 				id: "toast-loading",
+				dismissible: false,
 			})
 		}
-	}, [getUserIdentificationAuthorized])
+
+		if (getUserIdentificationLink.expiration_date) {
+			if (
+				isAfter(new Date(), new Date(getUserIdentificationLink.expiration_date))
+			) {
+				cleanUserIdentification()
+			}
+		}
+	}, [
+		getUserIdentificationAuthorized,
+		getUserIdentificationLink,
+		cleanUserIdentification,
+	])
 
 	useSWR(
 		getUserIdentificationAuthorized ===
@@ -134,6 +153,9 @@ export function UserIdentification() {
 			: null,
 		() => get_authorized({ document: getUserIdentification.document }),
 		{
+			revalidateOnFocus: true,
+			refreshWhenHidden: false,
+			refreshWhenOffline: false,
 			refreshInterval: (data) => {
 				if (
 					!data ||
@@ -153,9 +175,6 @@ export function UserIdentification() {
 
 				return 0
 			},
-			revalidateOnFocus: true,
-			refreshWhenHidden: false,
-			refreshWhenOffline: false,
 			onSuccess: async (data) => {
 				if (data.status === StatusAuthorizationLink.UNAUTHORIZED) {
 					toast.dismiss("toast-loading")
@@ -246,13 +265,13 @@ export function UserIdentification() {
 				</form>
 			</CardContent>
 			<CardFooter>
-				{getUserIdentificationLink ? (
+				{getUserIdentificationLink.expiration_date ? (
 					<Button onClick={handleOptIn}>
 						<Link
 							className="w-full h-full flex items-center justify-center gap-4"
 							target="_blank"
 							rel="noopener noreferrer"
-							href={getUserIdentificationLink}
+							href={getUserIdentificationLink.url || ""}
 						>
 							<div className="rotate-90">
 								<div className="animate-bounce">

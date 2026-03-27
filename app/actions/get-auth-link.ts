@@ -11,6 +11,7 @@ interface get_auth_link_req {
 
 interface get_auth_link_res {
 	link: string
+	expiration_date: string
 }
 
 export async function get_auth_link({
@@ -34,7 +35,7 @@ export async function get_auth_link({
 		},
 	)
 
-	const { link } = data
+	const { link, data_expiracao: expiration_date } = data
 
-	return { link }
+	return { link, expiration_date }
 }
