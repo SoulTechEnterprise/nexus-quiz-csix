@@ -34,7 +34,7 @@ export function Thanks() {
 				>
 					<Link
 						className="w-full h-full flex items-center justify-center"
-						href={getUserIdentificationLink || ""}
+						href={getUserIdentificationLink.url || ""}
 					>
 						Autorizar empréstimo
 					</Link>

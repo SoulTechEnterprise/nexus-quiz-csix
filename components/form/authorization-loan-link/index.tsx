@@ -79,7 +79,7 @@ export function AuthorizationLoanLink() {
 			link,
 		})
 
-		setUserIdentificationLink(link)
+		setUserIdentificationLink(link, "")
 
 		update(Step.THANKS)
 	}
