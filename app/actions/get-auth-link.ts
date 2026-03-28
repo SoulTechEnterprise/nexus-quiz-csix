@@ -37,5 +37,7 @@ export async function get_auth_link({
 
 	const { link, data_expiracao: expiration_date } = data
 
+	console.log(link, expiration_date)
+
 	return { link, expiration_date }
 }

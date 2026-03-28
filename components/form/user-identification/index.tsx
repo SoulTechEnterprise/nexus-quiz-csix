@@ -3,7 +3,7 @@ import { sendGTMEvent } from "@next/third-parties/google"
 import { format, isAfter, parse } from "date-fns"
 import { ArrowLeft, ArrowRight, BadgeCheck } from "lucide-react"
 import Link from "next/link"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { Controller, useForm } from "react-hook-form"
 import { IMaskMixin } from "react-imask"
 import { toast } from "sonner"
@@ -13,6 +13,8 @@ import { get_auth_link } from "@/app/actions/get-auth-link"
 import { get_authorized } from "@/app/actions/get-authorized"
 import { get_client_info } from "@/app/actions/get-client-info"
 import { get_simulation } from "@/app/actions/get-simulation"
+import { create_client_nocodb } from "@/app/actions/nocodb/create-client"
+import { update_client_nocodb } from "@/app/actions/nocodb/update-client"
 import { useTrack } from "@/app/hooks/use-track"
 import { Button } from "@/components/ui/button"
 import {
@@ -23,18 +25,30 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card"
+import {
+	Drawer,
+	DrawerClose,
+	DrawerContent,
+	DrawerDescription,
+	DrawerFooter,
+	DrawerHeader,
+	DrawerTitle,
+	DrawerTrigger,
+} from "@/components/ui/drawer"
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { GoogleTagManager } from "@/enum/google-tag-manager"
 import { StatusAuthorizationLink } from "@/enum/status"
 import { Step } from "@/enum/step"
 import { TypeSimulation } from "@/enum/type_simulation"
+import { useLinkZustand } from "@/lib/zustand/link"
 import { useSimulationZustand } from "@/lib/zustand/simulation"
 import { useStepZustand } from "@/lib/zustand/step"
 import { useUserIdentificationZustand } from "@/lib/zustand/user-identification"
 
 const zodSchema = z.object({
 	document: z.string().min(11).max(11),
+	phone: z.string().min(11).max(11),
 })
 
 type ZodSchema = z.infer<typeof zodSchema>
@@ -43,17 +57,18 @@ const _FORM = "form-user-identification"
 
 export function UserIdentification() {
 	const { track } = useTrack()
+	const [openDrawer, setOpenDrawer] = useState(false)
 
 	const { update } = useStepZustand()
 	const {
 		authorized: getUserIdentificationAuthorized,
 		auth: setUserIdentificationAuth,
 		data: getUserIdentification,
-		link: getUserIdentificationLink,
-		update_link: setUserIdentificationLink,
 		update: setUserIdentification,
 		clean: cleanUserIdentification,
 	} = useUserIdentificationZustand()
+
+	const { data: getLink, update: setLink, clean: cleanLink } = useLinkZustand()
 
 	const { update: setSimulation } = useSimulationZustand()
 
@@ -66,10 +81,14 @@ export function UserIdentification() {
 		resolver: zodResolver(zodSchema),
 		values: {
 			document: getUserIdentification.document || "",
+			phone: getUserIdentification.phone || "",
 		},
 	})
 
-	const handleFormUserIdentification = async ({ document }: ZodSchema) => {
+	const handleFormUserIdentification = async ({
+		document,
+		phone,
+	}: ZodSchema) => {
 		const { success, data } = await get_client_info({ document })
 
 		if (!success) {
@@ -82,7 +101,7 @@ export function UserIdentification() {
 
 			toast.error(error)
 
-			track({ event: GoogleTagManager.API_ERROR })
+			await track({ event: GoogleTagManager.API_ERROR })
 
 			return
 		}
@@ -93,7 +112,7 @@ export function UserIdentification() {
 			"yyyy-MM-dd",
 		)
 
-		setUserIdentification({ name, sex, date_birth, document })
+		setUserIdentification({ name, sex, date_birth, document, phone })
 
 		const { link, expiration_date } = await get_auth_link({
 			name,
@@ -101,21 +120,26 @@ export function UserIdentification() {
 			document,
 		})
 
-		setUserIdentificationLink(link, expiration_date)
+		setLink(link, expiration_date)
 
 		const first_name = name.split(" ")[0]
 		const last_name = name.split(" ").slice(1).join(" ") || ""
 
-		track({
+		await track({
 			event: GoogleTagManager.CLIENT_DOCUMENT_SUBMITTED,
 			data: { name, sex, date_birth, document },
 		})
+
+		await create_client_nocodb({ name, sex, date_birth, document, phone })
+
 		sendGTMEvent({
 			event: GoogleTagManager.CLIENT_DOCUMENT_SUBMITTED,
 			data: {
 				client: { first_name, last_name },
 			},
 		})
+
+		setOpenDrawer(true)
 	}
 
 	function handleOptIn() {
@@ -133,16 +157,22 @@ export function UserIdentification() {
 			})
 		}
 
-		if (getUserIdentificationLink.expiration_date) {
-			if (
-				isAfter(new Date(), new Date(getUserIdentificationLink.expiration_date))
-			) {
-				cleanUserIdentification()
+		if (getLink.expiration_date) {
+			if (isAfter(new Date(), new Date(getLink.expiration_date))) {
+				cleanLink()
 			}
+		}
+
+		if (
+			getUserIdentificationAuthorized === StatusAuthorizationLink.UNAUTHORIZED
+		) {
+			cleanUserIdentification()
+			cleanLink()
 		}
 	}, [
 		getUserIdentificationAuthorized,
-		getUserIdentificationLink,
+		getLink,
+		cleanLink,
 		cleanUserIdentification,
 	])
 
@@ -168,7 +198,6 @@ export function UserIdentification() {
 					track({
 						event: GoogleTagManager.CLIENT_WAITING_FOR_AUTHORIZATION,
 					})
-					console.log(true)
 
 					return 5000
 				}
@@ -185,6 +214,13 @@ export function UserIdentification() {
 						event: GoogleTagManager.CLIENT_AUTH_DENIED,
 					})
 					setUserIdentificationAuth(StatusAuthorizationLink.UNAUTHORIZED)
+					update_client_nocodb({
+						document: getUserIdentification.document,
+						status: StatusAuthorizationLink.UNAUTHORIZED,
+					})
+					cleanLink()
+					cleanUserIdentification()
+					setOpenDrawer(false)
 				}
 
 				if (data.status === StatusAuthorizationLink.AUTHORIZED) {
@@ -203,11 +239,17 @@ export function UserIdentification() {
 							},
 						)
 
+						setOpenDrawer(false)
 						sendGTMEvent({ event: GoogleTagManager.LOAN_OFFER_DENIED })
 						track({
 							event: GoogleTagManager.LOAN_OFFER_DENIED,
 						})
 						setUserIdentificationAuth(StatusAuthorizationLink.UNAUTHORIZED)
+						update_client_nocodb({
+							document: getUserIdentification.document,
+							status: StatusAuthorizationLink.UNAUTHORIZED,
+						})
+						cleanLink()
 						cleanUserIdentification()
 
 						return
@@ -223,6 +265,11 @@ export function UserIdentification() {
 
 					setUserIdentificationAuth(StatusAuthorizationLink.AUTHORIZED)
 					setSimulation(response)
+					update_client_nocodb({
+						document: getUserIdentification.document,
+						status: StatusAuthorizationLink.AUTHORIZED,
+						step: Step.LOAN_RELEASED,
+					})
 					update(Step.LOAN_RELEASED)
 				}
 			},
@@ -230,72 +277,141 @@ export function UserIdentification() {
 	)
 
 	return (
-		<Card>
-			<CardHeader>
-				<CardTitle className="flex items-center gap-2">
-					<BadgeCheck className="size-4 text-blue-500" />{" "}
-					{process.env.NEXT_PUBLIC_TITLE_CARD}
-				</CardTitle>
-				<CardDescription>
-					Para iniciar a simulação do seu empréstimo, informe o seu CPF abaixo.
-				</CardDescription>
-			</CardHeader>
-			<CardContent>
-				<form id={_FORM} onSubmit={handleSubmit(handleFormUserIdentification)}>
-					<FieldGroup>
-						<Controller
-							name="document"
-							control={control}
-							render={({ field, fieldState }) => (
-								<Field data-invalid={fieldState.invalid}>
-									<FieldLabel>CPF</FieldLabel>
-									<InputDocument
-										mask="000.000.000-00"
-										value={field.value || ""}
-										onAccept={(value: string) => field.onChange(value)}
-										lazy={true}
-										unmask={true}
-										placeholder="000.000.000-00"
-										inputMode="numeric"
-									/>
-								</Field>
-							)}
-						/>
-					</FieldGroup>
-				</form>
-			</CardContent>
-			<CardFooter>
-				{getUserIdentificationLink.expiration_date ? (
-					<Button onClick={handleOptIn}>
-						<Link
-							className="w-full h-full flex items-center justify-center gap-4"
-							target="_blank"
-							rel="noopener noreferrer"
-							href={getUserIdentificationLink.url || ""}
-						>
-							<div className="rotate-90">
-								<div className="animate-bounce">
-									<ArrowRight className="-rotate-90 size-4" />{" "}
-								</div>
-							</div>
-							ABRIR LINK DE AUTORIZAÇÃO
-							<div className="-rotate-90">
-								<div className="animate-bounce">
-									<ArrowLeft className="rotate-90 size-4" />{" "}
-								</div>
-							</div>
-						</Link>
-					</Button>
-				) : (
+		<>
+			<Card>
+				<CardHeader>
+					<CardTitle className="flex items-center gap-2">
+						<BadgeCheck className="size-4 text-blue-500" />{" "}
+						{process.env.NEXT_PUBLIC_TITLE_CARD}
+					</CardTitle>
+					<CardDescription>
+						Para iniciar a simulação do seu empréstimo, informe os dados abaixo.
+					</CardDescription>
+				</CardHeader>
+				<CardContent>
+					<form
+						id={_FORM}
+						onSubmit={handleSubmit(handleFormUserIdentification)}
+					>
+						<FieldGroup>
+							<Controller
+								name="document"
+								control={control}
+								render={({ field, fieldState }) => (
+									<Field data-invalid={fieldState.invalid}>
+										<FieldLabel>CPF</FieldLabel>
+										<InputMask
+											mask="000.000.000-00"
+											value={field.value || ""}
+											onAccept={(value: string) => field.onChange(value)}
+											lazy={true}
+											unmask={true}
+											placeholder="000.000.000-00"
+											inputMode="numeric"
+										/>
+									</Field>
+								)}
+							/>
+
+							<Controller
+								name="phone"
+								control={control}
+								render={({ field, fieldState }) => (
+									<Field data-invalid={fieldState.invalid}>
+										<FieldLabel>Whatsapp</FieldLabel>
+										<InputMask
+											mask="(00) 00000-0000"
+											value={field.value || ""}
+											onAccept={(value: string) => {
+												field.onChange(value)
+											}}
+											lazy={true}
+											unmask={true}
+											placeholder="(00) 00000-0000"
+											inputMode="numeric"
+										/>
+									</Field>
+								)}
+							/>
+						</FieldGroup>
+					</form>
+				</CardContent>
+				<CardFooter>
 					<Button disabled={isSubmitting} form={_FORM} type="submit">
 						Consultar
 					</Button>
-				)}
-			</CardFooter>
-		</Card>
+				</CardFooter>
+			</Card>
+
+			<Drawer open={openDrawer || getLink.link !== null}>
+				<DrawerContent className="max-w-sm m-auto">
+					<DrawerHeader>
+						<DrawerTitle>Autorização de Consulta</DrawerTitle>
+						<DrawerDescription>
+							Clique no link abaixo para autorizar a consulta do seu empréstimo.
+							Assim que finalizar, retorne a esta tela para continuarmos.
+						</DrawerDescription>
+					</DrawerHeader>
+					<DrawerFooter>
+						<Button onClick={handleOptIn}>
+							<Link
+								className="w-full h-full flex items-center justify-center gap-4"
+								target="_blank"
+								rel="noopener noreferrer"
+								href={getLink.link || ""}
+							>
+								<div className="rotate-90">
+									<div className="animate-bounce">
+										<ArrowRight className="-rotate-90 size-4" />{" "}
+									</div>
+								</div>
+								ABRIR LINK DE AUTORIZAÇÃO
+								<div className="-rotate-90">
+									<div className="animate-bounce">
+										<ArrowLeft className="rotate-90 size-4" />{" "}
+									</div>
+								</div>
+							</Link>
+						</Button>
+					</DrawerFooter>
+				</DrawerContent>
+			</Drawer>
+		</>
 	)
 }
 
-const InputDocument = IMaskMixin(({ inputRef, ...props }: any) => (
+const InputMask = IMaskMixin(({ inputRef, ...props }: any) => (
 	<Input {...props} ref={inputRef} />
 ))
+
+/*
+
+{getUserIdentificationLink.expiration_date ? (
+	<Button onClick={handleOptIn}>
+		<Link
+			className="w-full h-full flex items-center justify-center gap-4"
+			target="_blank"
+			rel="noopener noreferrer"
+			href={getUserIdentificationLink.url || ""}
+		>
+			<div className="rotate-90">
+				<div className="animate-bounce">
+					<ArrowRight className="-rotate-90 size-4" />{" "}
+				</div>
+			</div>
+			ABRIR LINK DE AUTORIZAÇÃO
+			<div className="-rotate-90">
+				<div className="animate-bounce">
+					<ArrowLeft className="rotate-90 size-4" />{" "}
+				</div>
+			</div>
+		</Link>
+	</Button>
+) : (
+	<DrawerTrigger>
+		<Button disabled={isSubmitting} form={_FORM} type="submit">
+			Consultar
+		</Button>
+	</DrawerTrigger>
+)}
+ */

@@ -2,7 +2,6 @@
 
 import axios from "axios"
 import { TypeSimulation } from "@/enum/type_simulation"
-import logger from "@/lib/logger"
 import { get_access_token } from "./get-access-token"
 
 interface get_simulation_req {
@@ -54,6 +53,8 @@ export async function get_simulation({
 					},
 				)
 
+				console.log(data)
+
 				const { condicoes_credito } = data
 
 				const { condicao } = condicoes_credito[0]
@@ -94,13 +95,8 @@ export async function get_simulation({
 					annual_client_rate,
 				}
 			} catch (err) {
-				logger.error({
-					err,
-					data: document,
-					type_simulation,
-					amount,
-					instalment,
-				})
+				console.dir(err, { depth: null })
+				console.error(err, { depth: null })
 				return null
 			}
 		}
@@ -162,13 +158,8 @@ export async function get_simulation({
 					annual_client_rate,
 				}
 			} catch (err) {
-				logger.error({
-					err,
-					data: document,
-					type_simulation,
-					amount,
-					instalment,
-				})
+				console.dir(err, { depth: null })
+				console.error(err, { depth: null })
 				return null
 			}
 		}

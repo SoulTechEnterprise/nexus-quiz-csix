@@ -1,7 +1,6 @@
 import superjson from "superjson"
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
-import { GoogleTagManager } from "@/enum/google-tag-manager"
 import type { Sex } from "@/enum/sex"
 import { StatusAuthorizationLink } from "@/enum/status"
 
@@ -10,23 +9,16 @@ export interface UserIdentification {
 	sex: Sex | ""
 	date_birth: string
 	document: string
-	phone?: string
-}
-
-export interface UserIdentificationLink {
-	url: string | null
-	expiration_date: string | null
+	phone: string
 }
 
 interface UserIdentificationState {
 	data: UserIdentification
 	authorized: StatusAuthorizationLink | null
-	link: UserIdentificationLink
 
 	update: (data: UserIdentification) => void
 	clean: () => void
 	auth: (authorized: StatusAuthorizationLink) => void
-	update_link: (url: string, expiration_date: string) => void
 }
 
 export const useUserIdentificationZustand = create<UserIdentificationState>()(
@@ -40,10 +32,6 @@ export const useUserIdentificationZustand = create<UserIdentificationState>()(
 				phone: "",
 			},
 			authorized: null,
-			link: {
-				url: null,
-				expiration_date: null,
-			},
 			update: ({
 				name,
 				sex,
@@ -61,23 +49,11 @@ export const useUserIdentificationZustand = create<UserIdentificationState>()(
 						document: "",
 						phone: "",
 					},
-					link: {
-						url: null,
-						expiration_date: null,
-					},
 					authorized: null,
 				}),
 			auth: (authorized: StatusAuthorizationLink) => {
 				set({
 					authorized,
-				})
-			},
-			update_link: (url: string, expiration_date: string) => {
-				set({
-					link: {
-						url,
-						expiration_date,
-					},
 				})
 			},
 		}),

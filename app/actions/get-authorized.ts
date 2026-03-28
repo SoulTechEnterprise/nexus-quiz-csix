@@ -31,5 +31,7 @@ export async function get_authorized({
 
 	const { status } = data
 
+	console.log(status)
+
 	return { status }
 }

@@ -1,7 +1,6 @@
 "use server"
 
 import axios from "axios"
-import logger from "@/lib/logger"
 import { get_access_token } from "./get-access-token"
 
 interface send_loan_req {
@@ -77,7 +76,6 @@ export async function send_loan({
 
 		return { proposal_number }
 	} catch (err) {
-		logger.error({ err, client })
 		return null
 	}
 }
