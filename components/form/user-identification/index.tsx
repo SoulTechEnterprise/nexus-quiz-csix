@@ -276,6 +276,12 @@ export function UserIdentification() {
 		},
 	)
 
+	const handleOut = () => {
+		cleanLink()
+		cleanUserIdentification()
+		setOpenDrawer(false)
+	}
+
 	return (
 		<>
 			<Card>
@@ -373,6 +379,9 @@ export function UserIdentification() {
 								</div>
 							</Link>
 						</Button>
+						<Button onClick={handleOut} variant="outline">
+							Cancelar
+						</Button>
 					</DrawerFooter>
 				</DrawerContent>
 			</Drawer>
@@ -383,35 +392,3 @@ export function UserIdentification() {
 const InputMask = IMaskMixin(({ inputRef, ...props }: any) => (
 	<Input {...props} ref={inputRef} />
 ))
-
-/*
-
-{getUserIdentificationLink.expiration_date ? (
-	<Button onClick={handleOptIn}>
-		<Link
-			className="w-full h-full flex items-center justify-center gap-4"
-			target="_blank"
-			rel="noopener noreferrer"
-			href={getUserIdentificationLink.url || ""}
-		>
-			<div className="rotate-90">
-				<div className="animate-bounce">
-					<ArrowRight className="-rotate-90 size-4" />{" "}
-				</div>
-			</div>
-			ABRIR LINK DE AUTORIZAÇÃO
-			<div className="-rotate-90">
-				<div className="animate-bounce">
-					<ArrowLeft className="rotate-90 size-4" />{" "}
-				</div>
-			</div>
-		</Link>
-	</Button>
-) : (
-	<DrawerTrigger>
-		<Button disabled={isSubmitting} form={_FORM} type="submit">
-			Consultar
-		</Button>
-	</DrawerTrigger>
-)}
- */
