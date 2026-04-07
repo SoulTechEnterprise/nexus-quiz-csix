@@ -1,7 +1,9 @@
 "use client"
 
+import { useEffect, useRef } from "react"
 import { Thanks } from "@/components/form/thanks"
 import { Progress } from "@/components/ui/progress"
+import { GoogleTagManager } from "@/enum/google-tag-manager"
 import { Step } from "@/enum/step"
 import { useStepZustand } from "@/lib/zustand/step"
 import { ChangeLoan } from "../components/form/change-loan"
@@ -9,10 +11,6 @@ import { LoanReleased } from "../components/form/loan-release"
 import { UserAddress } from "../components/form/user-address"
 import { UserBank } from "../components/form/user-bank"
 import { UserIdentification } from "../components/form/user-identification"
-
-import "vanilla-cookieconsent/dist/cookieconsent.css"
-import { useEffect, useRef } from "react"
-import { GoogleTagManager } from "@/enum/google-tag-manager"
 import { useTrack } from "./hooks/use-track"
 
 export default function Home() {
@@ -50,7 +48,7 @@ export default function Home() {
 			<button
 				onClick={cleanAllUp}
 				type="button"
-				className="fixed top-4 right-4 bg-white text-black px-4 py-2.5 rounded text-xs z-[90] pointer-events-auto cursor-pointer"
+				className="hidden top-4 right-4 bg-white text-black px-4 py-2.5 rounded text-xs z-[90] pointer-events-auto cursor-pointer"
 			>
 				Limpar
 			</button>

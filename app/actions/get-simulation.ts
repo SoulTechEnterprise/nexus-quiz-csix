@@ -96,7 +96,6 @@ export async function get_simulation({
 				}
 			} catch (err) {
 				console.dir(err, { depth: null })
-				console.error(err, { depth: null })
 				return null
 			}
 		}
