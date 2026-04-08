@@ -25,6 +25,8 @@ export async function get_auth_loan({
 		},
 	)
 
+	console.log(data)
+
 	const { url: link } = data
 
 	return { link }
